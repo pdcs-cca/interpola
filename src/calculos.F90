@@ -60,7 +60,7 @@ print *, "   *******   Doing interpolations   *******"
              do l=1,size(ed,dim=3) ! altura
                do  ih=1,size(ed,dim=4) !hora
                  do  kl=1,size(ed,dim=5) ! compuesto
-                 if (tvar(kl)) ed(i,j,l,ih,kl)=ed(i,j,l,ih,kl)+ei(ii,jj,l,ih,kl)*area
+                 if (tvar(kl)) ed(i,j,:,:,:)=ed(i,j,:,:,:)+ei(ii,jj,:,:,:)*area
                  end do ! kl
                end do ! ih
              end do  ! l
