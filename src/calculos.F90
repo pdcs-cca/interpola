@@ -31,17 +31,14 @@ real*8   :: elat1,elat2,elon1,elon2
 real*8   :: alat,alon,area,tot
 real*8  ::  xmas,xemis
 
-call indices (iid,ifd,jid,jfd,iie,ife,jie,jfe)
 print *, "   *******   Doing interpolations   *******"
-!    do j=1,djx!-1
-!    do i=1,dix!-1
-    do j=jid,jfd
-      do i=iid,ifd
+    do j=1,djx!-1
+!$OMP PARALLEL DO PRIVATE (ylat1, ylat2, xlon1, xlon2, alat, alon, elat1, elat2, elon1, elon2, tot, area, kl, jj)
+        do i=1,dix!-1
         ylat1=dlat(i ,j )
         ylat2=dlat(i,j+1) !staged lat
         xlon1=dlon(i  ,j)
         xlon2=dlon(i+1,j) !staged long
-!$omp parallel do private(area,tot,elat1,elat2,elon1,elon2,jj,ih,l,kl)
         do ii=iie,ife!1,eix
             do jj=jie,jfe!1,ejx
             alat=0.0
@@ -68,16 +65,20 @@ print *, "   *******   Doing interpolations   *******"
             end if  ! area
             end do  ! jj
         end do  ! ii
-!$omp end parallel do
-        xmas=xmas+ed(i,j,1,1,L_CO)*dx*dy/1e6
     end do     ! i
+!$OMP END PARALLEL DO
 end do    !  j
 !  Emissions inventory mass computation
-    do ii=1,eix
-        do jj=1,ejx
-        xemis=xemis+ei(ii,jj,1,1,L_CO) *dxe*dye/1e6
-        end do  ! jj
-    end do  ! ii
+do j=1,djx!-1
+    do i=1,dix!-1
+        xmas=xmas+ed(i,j,1,1,L_CO)*dx*dy/1e6
+    end do
+end do
+do ii=1,eix
+    do jj=1,ejx
+       xemis=xemis+ei(ii,jj,1,1,L_CO) *dxe*dye/1e6
+    end do  ! jj
+end do  ! ii
 !
 print *,'     ***** Mass balance *****'
 print '(A20,F10.0," dx= ",f5.0,"m dy= ",f5.0,"m")','Emissions Inventory:',xemis, dxe,dye
