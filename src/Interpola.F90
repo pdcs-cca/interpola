@@ -27,17 +27,31 @@
 !
 !****************************************************************************
 program Interpola
+real*8 :: t1,t2
 
 ! Variables
 ! all shared variables used are in vars_module
 ! local variables are in each subroutine
 ! Body of Interpola
+
+    call cpu_time(t1)
     Call reads_emision
+    call cpu_time(t2)
+    print *,':::: READS_EMISION: CPU time in seconds ',t2-t1
 
+    call cpu_time(t1)
     Call reads_grid
+    call cpu_time(t2)
+    print *,':::: READS_GRIDS: CPU time in seconds ',t2-t1
 
+    call cpu_time(t1)
     Call conversion
+    call cpu_time(t2)
+    print *,':::: CONVERSION: CPU time in seconds ',t2-t1
 
+    call cpu_time(t1)
     Call File_out
-
+    call cpu_time(t2)
+    print *,':::: FILE_OUT: CPU time in seconds ',t2-t1
 end program Interpola
+
