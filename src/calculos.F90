@@ -31,53 +31,64 @@ real*8   :: elat1,elat2,elon1,elon2
 real*8   :: alat,alon,area,tot
 real*8  ::  xmas,xemis
 
-call indices (iid,ifd,jid,jfd,iie,ife,jie,jfe)
 print *, "   *******   Doing interpolations   *******"
-!    do j=1,djx!-1
-!    do i=1,dix!-1
-    do j=jid,jfd
-      do i=iid,ifd
+!$OMP PARALLEL DO PRIVATE( area, alat, alon, elat1, elat2, elon1, elon2,ylat1,ylat2,xlon1,xlon2, tot, kl,jj,ii,i ) SCHEDULE(RUNTIME) 
+    do j=1,djx!-1
+    do i=1,dix!-1
         ylat1=dlat(i ,j )
         ylat2=dlat(i,j+1) !staged lat
         xlon1=dlon(i  ,j)
         xlon2=dlon(i+1,j) !staged long
-!$omp parallel do private(area,tot,elat1,elat2,elon1,elon2,jj,ih,l,kl)
-        do ii=iie,ife!1,eix
-            do jj=jie,jfe!1,ejx
+        do ii=1,eix
+            do jj=1,ejx
             alat=0.0
             alon=0.0
             elat1= elat(ii,jj)
             elat2= elat(ii,jj+1) !staged lat
             elon1= elon(ii,jj)
             elon2= elon(ii+1,jj)!staged long
-            tot=(elat2-elat1)*(elon2-elon1)/((ylat2-ylat1)*(xlon2-xlon1))
-            if(ylat1.le.elat2.and. ylat2.ge.elat1)alat=&
-            & (min(ylat2,elat2)-max(ylat1,elat1))/(elat2-elat1)
-            if(xlon1.le.elon2 .and. xlon2.ge.elon1)  alon=&
-            & (min(xlon2,elon2)-max(xlon1,elon1))/(elon2-elon1)
-            area=max(0.,alat*alon)* tot!
-            if( area.gt.0.) then
-             do l=1,size(ed,dim=3) ! altura
-               do  ih=1,size(ed,dim=4) !hora
-                 do  kl=1,size(ed,dim=5) ! compuesto
-                 if (tvar(kl)) ed(i,j,l,ih,kl)=ed(i,j,l,ih,kl)+ei(ii,jj,l,ih,kl)*area
-                 end do ! kl
-               end do ! ih
-             end do  ! l
-             if(tpob)dpob(i,j)=dpob(i,j)+epob(ii,jj)*area
-            end if  ! area
+            
+            if(ylat1.le.elat2.and. ylat2.ge.elat1) then
+                alat=(min(ylat2,elat2)-max(ylat1,elat1))/(elat2-elat1)
+            end if 
+            if(xlon1.le.elon2 .and. xlon2.ge.elon1) then 
+                    alon=(min(xlon2,elon2)-max(xlon1,elon1))/(elon2-elon1)
+            end if
+!            else
+!                cycle
+!            end if 
+                tot=(elat2-elat1)*(elon2-elon1)/((ylat2-ylat1)*(xlon2-xlon1))
+                area=max(0.,alat*alon)* tot!
+
+                if( area.gt.0.) then
+                     do l=1,size(ed,dim=3) ! altura
+                         do  ih=1,size(ed,dim=4) !hora
+                             do  kl=1,size(ed,dim=5) ! compuesto
+                                 if (tvar(kl)) ed(i,j,l,ih,kl)=ed(i,j,l,ih,kl)+ei(ii,jj,l,ih,kl)*area
+                             end do ! kl
+                           end do ! ih
+                    end do  ! l
+                    if(tpob)dpob(i,j)=dpob(i,j)+epob(ii,jj)*area
+                end if  ! area
             end do  ! jj
         end do  ! ii
-!$omp end parallel do
-        xmas=xmas+ed(i,j,1,1,L_CO)*dx*dy/1e6
     end do     ! i
 end do    !  j
+!$OMP END PARALLEL DO 
+
+
 !  Emissions inventory mass computation
-    do ii=1,eix
-        do jj=1,ejx
-        xemis=xemis+ei(ii,jj,1,1,L_CO) *dxe*dye/1e6
-        end do  ! jj
-    end do  ! ii
+do j=1,djx!-1
+    do i=1,dix!-1
+        xmas=xmas+ed(i,j,1,1,L_CO)*dx*dy/1e6
+    end do
+end do
+
+do ii=1,eix
+    do jj=1,ejx
+    xemis=xemis+ei(ii,jj,1,1,L_CO) *dxe*dye/1e6
+    end do  ! jj
+end do  ! ii
 !
 print *,'     ***** Mass balance *****'
 print '(A20,F10.0," dx= ",f5.0,"m dy= ",f5.0,"m")','Emissions Inventory:',xemis, dxe,dye
