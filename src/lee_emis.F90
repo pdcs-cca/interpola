@@ -142,26 +142,11 @@ tpob=.false.
         call check( nf90_get_att(ncid, ikk, "units", name))
         cunits(ikk)=trim(name)
         tvar(ikk)=.true.
+        call check(nf90_get_var(ncid, id_var(ikk),ea,start = (/1,1,1,1/)))
+        ei(:,:,:,:,ikk)=ea
+        print *,ikk,ename(ikk),id_var(ikk)
     end if
     end do
-!     Get emissions values
-    print *,"* Get emissions values "
-    do ikk=1,nvars
-      if(tvar(ikk)) then
-       ! print *,ikk,ename(ikk),id_var(ikk)
-      call check(nf90_get_var(ncid, id_var(ikk),ea,start = (/1,1,1,1/)))
-      do i=1, west_east
-        do j=1, south_north
-            do l=1,emissions_zdim_stag
-                do it=1,dim(1) !times in file
-                ei(i,j,l,it,ikk)=ea(i,j,l,it)
-                end do
-            end do
-        end do
-      end do
-        end if
-    end do
-   !print *,MAXVAL(ei)
     call check( nf90_get_att(ncid, nf90_global, "DX", dxe))
     call check( nf90_get_att(ncid, nf90_global, "DY", dye))
     eix= west_east
