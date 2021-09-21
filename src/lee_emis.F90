@@ -20,7 +20,8 @@ subroutine reads_emision
     implicit none
 
 ! This is the name of the data file to read
-character (len = *), parameter :: FILE_NAME = "wrfchemin.nc" !Inventory
+! nccopy -k netCDF-4 wrfchemin.nc wrfchemin.nc4
+character (len = *), parameter :: FILE_NAME = "wrfchemin.nc4" !Inventory
 integer :: i,j,l,it,ikk
 integer :: ncid,xtype
 integer :: lat_varid,lon_varid,btDimID
