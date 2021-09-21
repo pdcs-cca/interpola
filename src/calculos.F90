@@ -41,8 +41,8 @@ print *, "   *******   Doing interpolations   *******"
         ylat2=dlat(i,j+1) !staged lat
         xlon1=dlon(i  ,j)
         xlon2=dlon(i+1,j) !staged long
-!$omp parallel do private(area,tot,elat1,elat2,elon1,elon2,jj,ih,l,kl)
         do ii=iie,ife!1,eix
+  !$OMP PARALLEL DO PRIVATE (alat, alon, elat1, elat2, elon1, elon2, tot, area, kl)
             do jj=jie,jfe!1,ejx
             alat=0.0
             alon=0.0
@@ -67,8 +67,8 @@ print *, "   *******   Doing interpolations   *******"
              if(tpob)dpob(i,j)=dpob(i,j)+epob(ii,jj)*area
             end if  ! area
             end do  ! jj
+  !$OMP END PARALLEL DO
         end do  ! ii
-!$omp end parallel do
         xmas=xmas+ed(i,j,1,1,L_CO)*dx*dy/1e6
     end do     ! i
 end do    !  j
